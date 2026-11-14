@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Quiz Builder từ file Word</title>
+
+<style>
+
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1d2433;--mu:#6b7488;--pr:#3b5bdb;--ok:#2b8a3e;--okb:#ebfbee;--er:#c92a2a;--erb:#fff0f0;--wa:#e67700;--wab:#fff9db;--bd:#dde2ee}
+
+*{box-sizing:border-box}
+
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+
+.wrap{max-width:860px;margin:0 auto;padding:20px 14px 60px}
+
+h1{font-size:1.5rem;margin:6px 0 16px}
+
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(20,30,60,.05)}
+
+.drop{border:2px dashed #aab4d4;border-radius:14px;padding:36px 16px;text-align:center;color:var(--mu);cursor:pointer;background:#fafbff}
+
+.drop.over{border-color:var(--pr);background:#eef2ff}
+
+.drop b{color:var(--tx);display:block;font-size:1.05rem;margin-bottom:6px}
+
+button{font:inherit;border:1px solid var(--bd);background:#fff;border-radius:10px;padding:9px 16px;cursor:pointer;color:var(--tx)}
+
+button:hover:not(:disabled){border-color:var(--pr)}
+
+button:disabled{opacity:.45;cursor:not-allowed}
+
+button.pri{background:var(--pr);border-color:var(--pr);color:#fff;font-weight:600}
+
+button.sm{padding:4px 10px;font-size:.85rem}
+
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+
+.stat{flex:1 1 150px;background:#f7f8fc;border-radius:10px;padding:10px 14px}
+
+.stat b{display:block;font-size:1.5rem}
+
+.stat.bad b{color:var(--er)}.stat.good b{color:var(--ok)}
+
+.warn{background:var(--wab);border-left:4px solid var(--wa);padding:8px 12px;border-radius:8px;margin:6px 0;font-size:.95rem}
+
+.warn.err{background:var(--erb);border-color:var(--er)}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.sp{flex:1}
+
+.muted{color:var(--mu);font-size:.9rem}
+
+label.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-right:14px}
+
+.ed{border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0;background:#fcfcff}
+
+.ed.flag{border-color:var(--wa);background:#fffdf3}
+
+.ed textarea,.ed input[type=text]{width:100%;font:inherit;border:1px solid var(--bd);border-radius:8px;padding:6px 8px;background:#fff}
+
+.ed textarea{min-height:60px;resize:vertical}
+
+.ed .o{display:flex;gap:8px;align-items:center;margin-top:6px}
+
+.ed .o span{font-weight:600;min-width:22px}
+
+.qtext{font-size:1.15rem;white-space:pre-wrap;margin:6px 0 16px}
+
+.opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;margin:8px 0;cursor:pointer;white-space:pre-wrap;background:#fff}
+
+.opt:hover{border-color:var(--pr)}
+
+.opt.sel{border-color:var(--pr);background:#eef2ff}
+
+.opt.right{border-color:var(--ok);background:var(--okb)}
+
+.opt.wrong{border-color:var(--er);background:var(--erb)}
+
+.opt.lock{cursor:default}
+
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid #9aa4c0;flex:none;margin-top:3px}
+
+.sel .dot{border-color:var(--pr);background:radial-gradient(var(--pr) 45%,transparent 50%)}
+
+.bar{height:12px;background:#e6e9f4;border-radius:8px;overflow:hidden;margin:6px 0 14px}
+
+.bar i{display:block;height:100%;background:var(--pr);transition:width .2s}
+
+.fb{margin:10px 0;padding:10px 14px;border-radius:10px;font-weight:600}
+
+.fb.ok{background:var(--okb);color:var(--ok)}.fb.no{background:var(--erb);color:var(--er)}.fb.na{background:var(--wab);color:var(--wa)}
+
+.big{font-size:2.2rem;font-weight:700}
+
+.rv{border-bottom:1px solid var(--bd);padding:10px 0;white-space:pre-wrap}
+
+.hide{display:none!important}
+
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+details summary{cursor:pointer;color:var(--mu)}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>📝 Quiz KHÔN — tạo quiz từ file Word (.docx)</h1>
+
+
+
+<div id="sUpload" class="card">
+
+  <div class="drop" id="drop"><b>KÉO FILE .DOCX VÀO ĐÂY</b>hoặc bấm để chọn file Word</div>
+  <div class="row" style="margin-top:10px">
+    <button id="btnKey">Nạp file đáp án (.bas)</button>
+  </div>
+
+  <input type="file" id="file" accept=".docx" class="hide">
+  <input type="file" id="keyFile" accept=".bas,.txt" class="hide">
+  <div id="keyStatus" class="muted" style="margin-top:10px">Chưa nạp file đáp án (.bas)</div>
+
+  <div id="loading" class="muted hide" style="margin-top:10px">Đang đọc file…</div>
+
+  <div id="fatal"></div>
+
+</div>
+
+
+
+<div id="sReview" class="hide">
+
+  <div class="card">
+
+    <div class="muted" id="fname"></div>
+
+    <div class="stats" id="stats"></div>
+
+    <div id="summaryMsg"></div>
+
+    <div class="row" style="margin-top:12px">
+
+      <label class="chk"><input type="checkbox" id="shQ"> Trộn thứ tự câu hỏi</label>
+
+      <label class="chk"><input type="checkbox" id="shO"> Trộn thứ tự A/B/C/D</label>
+
+    </div>
+
+    <div class="row" style="margin-top:8px">
+
+      <button class="pri" id="btnCreate">TẠO QUIZ</button>
+
+      <button id="btnAll">Hiện / sửa tất cả câu</button>
+
+      <button id="btnNew">Chọn file khác</button>
+
+    </div>
+
+    <details style="margin-top:10px" id="ignoredBox"><summary id="ignoredSum"></summary><div id="ignoredList" class="muted" style="white-space:pre-wrap"></div></details>
+
+  </div>
+
+  <div class="card"><b id="edTitle">Câu cần kiểm tra</b><div class="muted">Bạn có thể sửa nội dung và chọn đáp án đúng thủ công trước khi tạo quiz.</div><div id="editors"></div></div>
+
+</div>
+
+
+
+<div id="sQuiz" class="hide">
+
+  <div class="card">
+
+    <div class="row"><b id="qHead"></b><span class="sp"></span><span id="qPct" class="muted"></span></div>
+
+    <div class="bar"><i id="qBar"></i></div>
+
+    <div id="qText" class="qtext"></div>
+
+    <div id="qOpts"></div>
+
+    <div id="qFb"></div>
+
+    <div class="nav">
+
+      <button id="bPrev">← Câu trước</button>
+
+      <button id="bCheck">Kiểm tra đáp án</button>
+
+      <button id="bNext">Câu tiếp →</button>
+
+      <span class="sp"></span>
+
+      <button id="bFinish" class="pri">Nộp bài</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div id="sResult" class="hide">
+
+  <div class="card">
+
+    <h2 style="margin-top:0">KẾT QUẢ</h2>
+
+    <div class="stats" id="resStats"></div>
+
+    <div class="big" id="resScore"></div>
+
+    <div class="muted" id="resRate"></div>
+
+    <div id="resNote"></div>
+
+    <div class="nav">
+
+      <button class="pri" id="bRedo">Làm lại</button>
+
+      <button id="bRedoWrong">Làm lại câu sai</button>
+
+      <button id="bReview">Xem đáp án</button>
+
+      <button id="bBack">Về trang chỉnh sửa</button>
+
+    </div>
+
+  </div>
+
+  <div class="card hide" id="reviewBox"></div>
+
+</div>
+
+</div>
+
+
+
+<script id="core">
+
+/* ================= CORE: đọc DOCX + tách câu hỏi (không phụ thuộc thư viện ngoài) ================= */
+
+async function inflateRaw(u8){
+
+  const s=new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+
+  return new Uint8Array(await new Response(s).arrayBuffer());
+
+}
+
+async function readZipEntry(buf,name){
+
+  const u8=new Uint8Array(buf),dv=new DataView(buf);
+
+  let e=-1;
+
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65557);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break;}}
+
+  if(e<0)throw new Error('Không phải file ZIP/DOCX hợp lệ.');
+
+  const n=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);
+
+  for(let k=0;k<n;k++){
+
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+
+    const method=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+
+    const fn=new TextDecoder().decode(u8.subarray(p+46,p+46+nl));
+
+    if(fn===name){
+
+      const st=lho+30+dv.getUint16(lho+26,true)+dv.getUint16(lho+28,true);
+
+      const data=u8.slice(st,st+cs);
+
+      if(method===0)return data;
+
+      if(method===8)return inflateRaw(data);
+
+      throw new Error('Kiểu nén ZIP không hỗ trợ: '+method);
+
+    }
+
+    p+=46+nl+el+cl;
+
+  }
+
+  throw new Error('Không tìm thấy '+name+' trong file (không phải file .docx Word?).');
+
+}
+
+function decodeEnt(s){
+
+  return s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(m,g)=>{
+
+    g=g.toLowerCase();
+
+    if(g==='amp')return'&';if(g==='lt')return'<';if(g==='gt')return'>';if(g==='quot')return'"';if(g==='apos')return"'";
+
+    const c=g[1]==='x'?parseInt(g.slice(2),16):parseInt(g.slice(1),10);
+
+    return String.fromCodePoint(c);
+
+  });
+
+}
+
+/* Trả về danh sách đoạn văn: {text, bold:[0/1 theo từng ký tự], hl:[0/1]} — đọc định dạng ở mức RUN */
+
+function extractParagraphs(xml){
+  const paras=[];
+  const pRe=/<w:p(?:\s[^>]*)?>([\s\S]*?)<\/w:p>/g; let pm;
+  while((pm=pRe.exec(xml))){
+    let text=''; const bold=[], hl=[];
+    const rRe=/<w:r(?:\s[^>]*)?>([\s\S]*?)<\/w:r>/g; let rm;
+    while((rm=rRe.exec(pm[1]))){
+      const run=rm[1];
+      const rp=(/<w:rPr>([\s\S]*?)<\/w:rPr>/.exec(run)||[])[1]||'';
+      let b=0;
+      const bt=/<w:b(?:\s[^>]*)?\/?>(?:<\/w:b>)?/.exec(rp);
+      if(bt && !/w:val=["'](?:0|false|off)["']/i.test(bt[0])) b=1;
+      let h=0;
+      const ht=/<w:highlight\s[^>]*w:val=["']([^"']+)["'][^>]*\/?>(?:<\/w:highlight>)?/.exec(rp);
+      if(ht && ht[1].toLowerCase()!=='none') h=1;
+      const tRe=/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>|<w:tab\s*\/?>(?:<\/w:tab>)?|<w:br\s*\/?>(?:<\/w:br>)?|<w:cr\s*\/?>(?:<\/w:cr>)?/g; let tm;
+      while((tm=tRe.exec(run))){
+        const t=tm[1]!==undefined ? decodeEnt(tm[1]) : (tm[0].startsWith('<w:tab')?'\t':'\n');
+        for(const ch of t){ text+=ch; bold.push(b); hl.push(h); }
+      }
+    }
+    paras.push({text,bold,hl});
+  }
+  return paras;
+}
+
+function trimPara(p){
+
+  let a=0,b=p.text.length;
+
+  while(a<b&&/\s/.test(p.text[a]))a++;
+
+  while(b>a&&/\s/.test(p.text[b-1]))b--;
+
+  return {text:p.text.slice(a,b),bold:p.bold.slice(a,b),hl:p.hl.slice(a,b)};
+
+}
+
+const RX_CAU=/^\s*(?:Câu|Cau|Question|Q)\s*(\d+)\s*[:.)]?\s*/i;
+const RX_NUM=/^\s*(\d+)\s*[.)]\s+/;
+const RX_OPT=/^\s*([A-Fa-f])\s*[.):\-]\s+/;
+const RX_KEY=/^\s*(?:Đáp án|Dap an|Answer|ĐA)\s*(?:đúng)?\s*[:.]\s*([A-Fa-f])\b/i;
+
+function sliceInfo(p,a,b){
+
+  let any=0,all=1,hl=0,n=0;
+
+  for(let i=a;i<b;i++){if(/\s/.test(p.text[i]))continue;n++;if(p.bold[i])any=1;else all=0;if(p.hl[i])hl=1;}
+
+  return{text:p.text.slice(a,b).trim(),bold:!!(n&&any),full:!!(n&&all),hl:!!hl};
+
+}
+
+/* tách đoạn thành các lựa chọn (hỗ trợ cả "A. ... B. ..." trên cùng một dòng) */
+
+function splitOptionsInPara(p){
+
+  const m=RX_OPT.exec(p.text);if(!m)return null;
+
+  const marks=[{letter:m[1].toUpperCase(),s:m[0].length,mk:0}];
+
+  let exp=String.fromCharCode(m[1].toUpperCase().charCodeAt(0)+1);
+
+  const re=/(?:^|[\s\t])([A-F])\s*[.):]\s+/g;re.lastIndex=m[0].length;let x;
+
+  while((x=re.exec(p.text))){
+
+    if(x[1]===exp){marks.push({letter:x[1],s:x.index+x[0].length,mk:x.index});exp=String.fromCharCode(exp.charCodeAt(0)+1);}
+
+  }
+
+  return marks.map((k,i)=>({letter:k.letter,...sliceInfo(p,k.s,i+1<marks.length?marks[i+1].mk:p.text.length)}));
+
+}
+
+function parseParagraphs(rawParas){
+
+  const paras=rawParas.map(trimPara).filter(p=>p.text.length>0);
+
+  const hasCau=paras.some(p=>RX_CAU.test(p.text));
+
+  const rxQ=hasCau?RX_CAU:RX_NUM;
+
+  const qs=[],ignored=[];let cur=null,lastOpt=null;
+
+  const startQ=(label,text,p,off)=>{
+
+    cur={idx:qs.length+1,label,text:text,opts:[],keyLetter:null,notes:[]};qs.push(cur);lastOpt=null;
+
+  };
+
+  for(let i=0;i<paras.length;i++){
+
+    const p=paras[i];
+
+    const key=RX_KEY.exec(p.text);
+
+    if(key&&cur){cur.keyLetter=key[1].toUpperCase();continue;}
+
+    const qm=rxQ.exec(p.text);
+
+    if(qm&&!(cur&&cur.opts.length===0&&false)){startQ(qm[1],p.text.slice(qm[0].length),p);continue;}
+
+    const opts=cur?splitOptionsInPara(p):null;
+
+    if(opts){for(const o of opts){cur.opts.push(o);}lastOpt=cur.opts[cur.opts.length-1];continue;}
+
+    if(!cur){
+
+      const nxt=paras[i+1];
+
+      if(nxt&&RX_OPT.test(nxt.text)&&!hasCau){startQ(null,p.text,p);continue;}
+
+      ignored.push(p.text);continue;
+
+    }
+
+    if(cur.opts.length>0){
+
+      const nxt=paras[i+1];
+
+      if(nxt&&RX_OPT.test(nxt.text)&&RX_OPT.exec(nxt.text)[1].toUpperCase()==='A'&&!hasCau){startQ(null,p.text,p);continue;}
+
+      lastOpt.text+='\n'+p.text;
+
+      if(p.bold.some((b,j)=>b&&!/\s/.test(p.text[j])))lastOpt.bold=true;
+
+      if(p.hl.some(Boolean))lastOpt.hl=true;
+
+    }else{
+
+      cur.text+=(cur.text?'\n':'')+p.text;
+
+    }
+
+  }
+
+  return{questions:qs,ignored,hasCau};
+
+}
+
+/* xác định đáp án đúng: Bold (chính) → Highlight → dòng "Đáp án: X". Không đoán. */
+
+function resolveAnswers(qs){
+
+  for(const q of qs){
+
+    q.correct=null;q.method=null;q.problems=[];
+
+    const bold=q.opts.map((o,i)=>o.bold?i:-1).filter(i=>i>=0);
+
+    const hl=q.opts.map((o,i)=>o.hl?i:-1).filter(i=>i>=0);
+
+    if(bold.length===1){q.correct=bold[0];q.method='bold';}
+
+    else if(bold.length>1)q.problems.push('Có '+bold.length+' lựa chọn in đậm ('+bold.map(i=>q.opts[i].letter).join(', ')+') — không xác định được đáp án đúng.');
+
+    else if(hl.length===1){q.correct=hl[0];q.method='highlight';}
+
+    else if(hl.length>1)q.problems.push('Có '+hl.length+' lựa chọn được highlight ('+hl.map(i=>q.opts[i].letter).join(', ')+') và không có chữ in đậm.');
+
+    else if(q.keyLetter){
+
+      const i=q.opts.findIndex(o=>o.letter===q.keyLetter);
+
+      if(i>=0){q.correct=i;q.method='key';}
+
+    }
+
+    if(q.correct===null&&!q.problems.length)q.problems.push('Không xác định được đáp án đúng.');
+
+    if(!q.text.trim())q.problems.push('Nội dung câu hỏi trống.');
+
+    if(q.opts.length===0)q.problems.push('Không tìm thấy lựa chọn nào.');
+
+    else if(q.opts.length!==4)q.problems.push('Tìm thấy '+q.opts.length+' lựa chọn thay vì 4.');
+
+    const letters=q.opts.map(o=>o.letter).join('');
+
+    if(q.opts.length&&letters!=='ABCDEF'.slice(0,q.opts.length))q.problems.push('Thứ tự nhãn lựa chọn bất thường: '+q.opts.map(o=>o.letter).join(', ')+'.');
+
+    if(q.opts.some(o=>!o.text))q.problems.push('Có lựa chọn bị trống nội dung.');
+
+  }
+
+  // kiểm tra nhảy số câu / trùng số câu để phát hiện câu có thể bị sót
+
+  const seq=[];qs.forEach(q=>{if(q.label!=null)seq.push(q);});
+
+  for(let i=1;i<seq.length;i++){
+
+    const a=+seq[i-1].label,b=+seq[i].label;
+
+    if(b===a)seq[i].problems.push('Trùng số câu ('+b+') với câu liền trước.');
+
+    else if(b!==a+1)seq[i].problems.push('Số câu nhảy từ '+a+' sang '+b+' — có thể thiếu hoặc lỗi đánh số.');
+
+  }
+
+  return qs;
+
+}
+
+async function parseDocx(buf){
+
+  const xml=new TextDecoder('utf-8').decode(await readZipEntry(buf,'word/document.xml'));
+
+  const r=parseParagraphs(extractParagraphs(xml));
+
+  resolveAnswers(r.questions);
+
+  return r;
+
+}
+
+function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+/* tạo bài: mỗi item giữ chỉ số GỐC của lựa chọn nên đáp án đúng luôn chính xác sau khi trộn */
+
+function buildItems(qs,shQ,shO){
+
+  let order=qs.map((\_,i)=>i);if(shQ)order=shuffled(order);
+
+  return order.map(qi=>{const n=qs[qi].opts.length;let o=[...Array(n).keys()];if(shO)o=shuffled(o);return{qi,opts:o};});
+
+}
+
+function gradeItem(qs,item,sel){ // sel = vị trí hiển thị
+
+  const q=qs[item.qi];
+
+  if(q.correct===null)return'na';
+
+  if(sel==null)return'none';
+
+  return item.opts[sel]===q.correct?'ok':'no';
+
+}
+
+function scoreAll(qs,items,answers){
+
+  let ok=0,no=0,none=0,na=0;
+
+  items.forEach((it,i)=>{const g=gradeItem(qs,it,answers[i]);if(g==='ok')ok++;else if(g==='no')no++;else if(g==='none')none++;else{na++;}});
+
+  const scored=items.length-na;
+
+  return{ok,no,none,na,scored,score:scored?ok/scored*10:0,rate:scored?ok/scored*100:0};
+
+}
+
+</script>
+
+
+
+<script id="ui">
+
+/* ================= GIAO DIỆN ================= */
+
+const $=id=>document.getElementById(id);
+
+let QS=[],IGN=[],showAll=false,Q=null,KEYMAP={}; // Q = trạng thái quiz
+
+function show(id){['sUpload','sReview','sQuiz','sResult'].forEach(x=>$(x).classList.toggle('hide',x!==id));window.scrollTo(0,0);}
+
+const el=(t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!==undefined)e.textContent=txt;return e;};
+
+
+
+function parseBasAnswers(text){
+  const map={};
+  // Accept formats like: 1:C,2:B,... inside VBA strings, with optional spaces/newlines.
+  const re=/(?:^|[,\s])(?:"\s*)?(\d{1,3})\s*:\s*([A-Fa-f])\b/g;
+  let m;
+  while((m=re.exec(text))) map[Number(m[1])]=m[2].toUpperCase();
+  return map;
+}
+
+function applyKeyMap(qs,map){
+  for(const q of qs){
+    const letter=map[Number(q.label)];
+    if(letter && q.opts.some(o=>o.letter===letter)){
+      q.correct=q.opts.findIndex(o=>o.letter===letter);
+      q.method='file .bas';
+      q.problems=q.problems.filter(p=>!p.includes('Không xác định được đáp án đúng'));
+    }else if(letter){
+      q.problems.push('File .bas có đáp án '+letter+' nhưng câu này không có lựa chọn '+letter+'.');
+    }
+  }
+}
+
+async function handleKeyFile(f){
+  if(!f)return;
+  try{
+    const text=await f.text();
+    KEYMAP=parseBasAnswers(text);
+    const n=Object.keys(KEYMAP).length;
+    $('keyStatus').textContent='Đã nạp đáp án: '+n+' câu từ '+f.name;
+    if(QS.length){ applyKeyMap(QS,KEYMAP); revalidate(); renderReview(); }
+  }catch(e){
+    $('keyStatus').textContent='Lỗi đọc file đáp án: '+e.message;
+  }
+}
+
+async function handleFile(f){
+
+  $('fatal').innerHTML='';
+
+  if(!f)return;
+
+  if(!/**\\.**&#x64;ocx$/i.test(f.name)){$('fatal').appendChild(el('div','warn err','Chỉ hỗ trợ file .docx (không phải .doc). Hãy mở bằng Word và Lưu thành .docx.'));return;}
+
+  $('loading').classList.remove('hide');
+
+  try{
+
+    const r=await parseDocx(await f.arrayBuffer());
+
+    QS=r.questions;IGN=r.ignored;showAll=false;
+    if(Object.keys(KEYMAP).length) applyKeyMap(QS,KEYMAP);
+
+    $('fname').textContent='File: '+f.name;
+
+    if(!QS.length)throw new Error('Không tìm thấy câu hỏi nào theo dạng "Câu 1: …" / "A. …". Kiểm tra lại định dạng file.');
+
+    renderReview();show('sReview');
+
+  }catch(e){
+
+    $('fatal').appendChild(el('div','warn err','Lỗi đọc file: '+e.message));
+
+  }finally{$('loading').classList.add('hide');}
+
+}
+
+function revalidate(){
+
+  // tính lại cảnh báo dựa trên dữ liệu hiện tại (sau khi người dùng sửa)
+
+  QS.forEach(q=>{
+
+    const keep=q.problems.filter(p=>/nhảy từ|Trùng số/.test(p)&&!q.edited);
+
+    q.problems=keep;
+
+    if(q.correct===null)q.problems.push('Không xác định được đáp án đúng.');
+
+    if(!q.text.trim())q.problems.push('Nội dung câu hỏi trống.');
+
+    if(q.opts.length===0)q.problems.push('Không tìm thấy lựa chọn nào.');
+
+    else if(q.opts.length!==4)q.problems.push('Có '+q.opts.length+' lựa chọn thay vì 4.');
+
+    if(q.opts.some(o=>!o.text.trim()))q.problems.push('Có lựa chọn bị trống nội dung.');
+
+  });
+
+}
+
+function renderStats(){
+
+  const total=QS.length,four=QS.filter(q=>q.opts.length===4).length,resolved=QS.filter(q=>q.correct!==null).length,bad=QS.filter(q=>q.problems.length).length;
+
+  const s=$('stats');s.innerHTML='';
+
+  [['Đã tìm thấy',total+' câu hỏi',''],['Đủ 4 đáp án',four+' / '+total,four===total?'good':'bad'],['Đã xác định đáp án đúng',resolved+' / '+total,resolved===total?'good':'bad'],['Câu cần kiểm tra',bad,bad?'bad':'good']]
+
+   .forEach(([a,b,c])=>{const d=el('div','stat '+c);d.appendChild(el('b','',b));d.appendChild(el('span','muted',a));s.appendChild(d);});
+
+  const m=$('summaryMsg');m.innerHTML='';
+
+  const unres=total-resolved;
+
+  if(unres)m.appendChild(el('div','warn err','⚠ '+unres+' câu chưa có đáp án đúng. Nếu không sửa, các câu này vẫn xuất hiện trong quiz nhưng KHÔNG được tính điểm.'));
+
+  if(!bad)m.appendChild(el('div','warn','✓ Không phát hiện lỗi.'));
+
+  $('ignoredBox').classList.toggle('hide',!IGN.length);
+
+  $('ignoredSum').textContent='Có '+IGN.length+' đoạn văn bản không thuộc câu hỏi nào (tiêu đề…) — bấm để xem';
+
+  $('ignoredList').textContent=IGN.join('\n');
+
+}
+
+function renderReview(){
+
+  renderStats();
+
+  const box=$('editors');box.innerHTML='';
+
+  const list=QS.map((q,i)=>[q,i]).filter(([q])=>showAll||q.problems.length);
+
+  $('edTitle').textContent=showAll?'Tất cả '+QS.length+' câu':'Câu cần kiểm tra ('+list.length+')';
+
+  if(!list.length)box.appendChild(el('div','muted','Không có câu nào cần kiểm tra.'));
+
+  const CH=300;let shown=0;
+
+  const more=el('button','','Hiện thêm…');
+
+  const draw=()=>{
+
+    list.slice(shown,shown+CH).forEach(([q,i])=>box.insertBefore(editor(q,i),more));
+
+    shown+=CH;more.classList.toggle('hide',shown>=list.length);
+
+  };
+
+  more.onclick=draw;box.appendChild(more);draw();
+
+}
+
+function editor(q,i){
+
+  const d=el('div','ed'+(q.problems.length?' flag':''));
+
+  const head=el('div','row');head.appendChild(el('b','','⚠ Câu '+(q.label??('#'+q.idx))));
+
+  const st=el('span','muted',q.method?'(đáp án nhận từ: '+q.method+')':'');head.appendChild(st);d.appendChild(head);
+
+  const pr=el('div');q.problems.forEach(p=>pr.appendChild(el('div','warn',p)));d.appendChild(pr);
+
+  if(!q.problems.length)head.firstChild.textContent='Câu '+(q.label??('#'+q.idx));
+
+  const ta=el('textarea');ta.value=q.text;ta.oninput=()=>{q.text=ta.value;q.edited=1;};d.appendChild(ta);
+
+  const ol=el('div');d.appendChild(ol);
+
+  const refresh=()=>{
+
+    ol.innerHTML='';
+
+    q.opts.forEach((o,k)=>{
+
+      const r=el('div','o');
+
+      const rd=el('input');rd.type='radio';rd.name='c'+i;rd.checked=q.correct===k;rd.title='Đáp án đúng';
+
+      rd.onchange=()=>{q.correct=k;q.method='thủ công';q.edited=1;revalidate();renderStats();pr.innerHTML='';q.problems.forEach(p=>pr.appendChild(el('div','warn',p)));d.classList.toggle('flag',!!q.problems.length);st.textContent='(đáp án: thủ công)';};
+
+      const lt=el('span','',String.fromCharCode(65+k)+'.');
+
+      const inp=el('input');inp.type='text';inp.value=o.text;inp.oninput=()=>{o.text=inp.value;q.edited=1;};
+
+      const x=el('button','sm','×');x.title='Xóa lựa chọn này';x.onclick=()=>{q.opts.splice(k,1);if(q.correct===k)q.correct=null;else if(q.correct>k)q.correct--;q.opts.forEach((oo,n)=>oo.letter=String.fromCharCode(65+n));q.edited=1;revalidate();renderStats();refresh();};
+
+      r.append(rd,lt,inp,x);ol.appendChild(r);
+
+    });
+
+    const add=el('button','sm','+ Thêm lựa chọn');add.style.marginTop='6px';
+
+    add.onclick=()=>{q.opts.push({letter:String.fromCharCode(65+q.opts.length),text:'',bold:false,full:false,hl:false});q.edited=1;revalidate();renderStats();refresh();};
+
+    ol.appendChild(add);
+
+  };
+
+  refresh();return d;
+
+}
+
+
+
+/* ---------- Quiz ---------- */
+
+function startQuiz(subsetIdx){
+
+  const base=subsetIdx?subsetIdx.map(i=>QS[i]):QS;
+
+  const sh=buildItems(QS,$('shQ').checked,$('shO').checked);
+
+  const items=subsetIdx?sh.filter(it=>subsetIdx.includes(it.qi)):sh;
+
+  Q={items,ans:items.map(()=>null),checked:items.map(()=>false),cur:0};
+
+  show('sQuiz');renderQ();
+
+}
+
+function renderQ(){
+
+  const it=Q.items[Q.cur],q=QS[it.qi],n=Q.items.length;
+
+  $('qHead').textContent='CÂU '+(Q.cur+1)+'/'+n;
+
+  const pct=Math.round((Q.cur+1)/n*100);
+
+  $('qBar').style.width=pct+'%';$('qPct').textContent=pct+'%';
+
+  $('qText').textContent=q.text;
+
+  const box=$('qOpts');box.innerHTML='';
+
+  const locked=Q.checked[Q.cur];
+
+  it.opts.forEach((oi,pos)=>{
+
+    const d=el('div','opt');d.appendChild(el('span','dot'));
+
+    d.appendChild(el('span','',String.fromCharCode(65+pos)+'. '+q.opts[oi].text));
+
+    if(Q.ans[Q.cur]===pos)d.classList.add('sel');
+
+    if(locked){d.classList.add('lock');
+
+      if(oi===q.correct)d.classList.add('right');
+
+      else if(Q.ans[Q.cur]===pos)d.classList.add('wrong');}
+
+    d.onclick=()=>{if(Q.checked[Q.cur])return;Q.ans[Q.cur]=pos;renderQ();};
+
+    box.appendChild(d);
+
+  });
+
+  const fb=$('qFb');fb.innerHTML='';
+
+  if(locked){
+
+    const g=gradeItem(QS,it,Q.ans[Q.cur]);
+
+    if(g==='ok')fb.appendChild(el('div','fb ok','✓ Đúng'));
+
+    else if(g==='no'){const ci=it.opts.indexOf(q.correct);fb.appendChild(el('div','fb no','✗ Sai — Đáp án đúng: '+String.fromCharCode(65+ci)+'. '+q.opts[q.correct].text));}
+
+    else fb.appendChild(el('div','fb na','⚠ Câu này chưa xác định được đáp án đúng trong file.'));
+
+  }
+
+  $('bPrev').disabled=Q.cur===0;
+
+  $('bNext').disabled=Q.cur===n-1;
+
+  $('bCheck').disabled=Q.ans[Q.cur]==null||locked;
+
+}
+
+function finish(){
+
+  const r=scoreAll(QS,Q.items,Q.ans);
+
+  const s=$('resStats');s.innerHTML='';
+
+  [['Đúng',r.ok,'good'],['Sai',r.no,'bad'],['Chưa làm',r.none,'']].forEach(([a,b,c])=>{const d=el('div','stat '+c);d.appendChild(el('b','',b));d.appendChild(el('span','muted',a));s.appendChild(d);});
+
+  $('resScore').textContent='Điểm: '+(Math.round(r.score*100)/100)+'/10';
+
+  $('resRate').textContent='Tỷ lệ đúng: '+r.rate.toFixed(1)+'%';
+
+  $('resNote').innerHTML='';
+
+  if(r.na)$('resNote').appendChild(el('div','warn err',r.na+' câu không có đáp án đúng trong file nên không được tính điểm.'));
+
+  $('bRedoWrong').disabled=r.no+r.none===0;
+
+  $('reviewBox').classList.add('hide');
+
+  show('sResult');
+
+}
+
+function reviewAnswers(){
+
+  const b=$('reviewBox');b.innerHTML='';
+
+  Q.items.forEach((it,i)=>{
+
+    const q=QS[it.qi],d=el('div','rv');
+
+    const g=gradeItem(QS,it,Q.ans[i]);
+
+    d.appendChild(el('b','',(g==='ok'?'✓ ':g==='no'?'✗ ':g==='none'?'– ':'⚠ ')+'Câu '+(i+1)+': '+q.text));
+
+    it.opts.forEach((oi,pos)=>{
+
+      const o=el('div','',(oi===q.correct?'✔ ':'   ')+String.fromCharCode(65+pos)+'. '+q.opts[oi].text+(Q.ans[i]===pos?'   ← bạn chọn':''));
+
+      if(oi===q.correct){o.style.color='var(--ok)';o.style.fontWeight='600';}
+
+      d.appendChild(o);
+
+    });
+
+    if(q.correct===null)d.appendChild(el('div','muted','(Không xác định được đáp án đúng)'));
+
+    b.appendChild(d);
+
+  });
+
+  b.classList.remove('hide');b.scrollIntoView();
+
+}
+
+
+
+/* ---------- Sự kiện ---------- */
+
+const drop=$('drop'),fi=$('file'),kfi=$('keyFile');
+
+drop.onclick=()=>fi.click();
+
+fi.onchange=()=>handleFile(fi.files[0]);
+kfi.onchange=()=>handleKeyFile(kfi.files[0]);
+$('btnKey').onclick=()=>kfi.click();
+
+['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over');}));
+
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over');}));
+
+drop.addEventListener('drop',ev=>handleFile(ev.dataTransfer.files[0]));
+
+window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>e.preventDefault());
+
+$('btnNew').onclick=()=>{fi.value='';kfi.value='';KEYMAP={};$('keyStatus').textContent='Chưa nạp file đáp án (.bas)';show('sUpload');};
+
+$('btnAll').onclick=()=>{showAll=!showAll;renderReview();};
+
+$('btnCreate').onclick=()=>{
+
+  revalidate();
+
+  const un=QS.filter(q=>q.correct===null).length,bad=QS.filter(q=>q.opts.length===0).length;
+
+  if(bad){alert('Có '+bad+' câu không có lựa chọn nào. Hãy sửa trước khi tạo quiz.');return;}
+
+  if(un&&!confirm(un+' câu chưa xác định được đáp án đúng. Vẫn tạo quiz để bạn sửa thủ công?'))return;
+
+  startQuiz();
+
+};
+
+$('bPrev').onclick=()=>{Q.cur--;renderQ();};
+
+$('bNext').onclick=()=>{Q.cur++;renderQ();};
+
+$('bCheck').onclick=()=>{Q.checked[Q.cur]=true;renderQ();};
+
+$('bFinish').onclick=()=>{const left=Q.ans.filter(a=>a==null).length;if(left&&!confirm('Còn '+left+' câu chưa làm. Nộp bài?'))return;finish();};
+
+$('bRedo').onclick=()=>startQuiz();
+
+$('bRedoWrong').onclick=()=>{
+
+  const idx=[];Q.items.forEach((it,i)=>{const g=gradeItem(QS,it,Q.ans[i]);if(g==='no'||g==='none')idx.push(it.qi);});
+
+  if(idx.length)startQuiz(idx);
+
+};
+
+$('bReview').onclick=reviewAnswers;
+
+$('bBack').onclick=()=>{renderReview();show('sReview');};
+
+</script>
+
+</body>
+
+</html>
